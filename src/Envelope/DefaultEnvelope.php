@@ -2,36 +2,30 @@
 
 namespace SimpleBus\Serialization\Envelope;
 
-use Assert\Assertion;
+use LogicException;
 
 class DefaultEnvelope implements Envelope
 {
     /**
-     * @var string
+     * @var class-string
      */
-    private $messageType;
+    private string $messageType;
+
+    private ?object $message = null;
+
+    private ?string $serializedMessage = null;
 
     /**
-     * @var null|object
+     * @param class-string $messageType
      */
-    private $message;
-
-    /**
-     * @var null|string
-     */
-    private $serializedMessage;
-
-    protected function __construct($messageType, $message = null, $serializedMessage = null)
+    protected function __construct(string $messageType, ?object $message, ?string $serializedMessage)
     {
-        $this->setMessageType($messageType);
-        $this->setMessage($message);
-        $this->setSerializedMessage($serializedMessage);
+        $this->messageType = $messageType;
+        $this->message = $message;
+        $this->serializedMessage = $serializedMessage;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public static function forMessage($message)
+    public static function forMessage(object $message): self
     {
         $type = get_class($message);
 
@@ -39,84 +33,43 @@ class DefaultEnvelope implements Envelope
     }
 
     /**
-     * {@inheritdoc}
+     * @param class-string $type
      */
-    public static function forSerializedMessage($type, $serializedMessage)
+    public static function forSerializedMessage(string $type, string $serializedMessage): self
     {
-        Assertion::string($type);
-        Assertion::string($serializedMessage);
-
         return new self($type, null, $serializedMessage);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function messageType()
+    public function messageType(): string
     {
         return $this->messageType;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function message()
+    public function message(): object
     {
         if (null === $this->message) {
-            throw new \LogicException('Message is unavailable');
+            throw new LogicException('Message is unavailable');
         }
 
         return $this->message;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function serializedMessage()
+    public function serializedMessage(): string
     {
         if (null === $this->serializedMessage) {
-            throw new \LogicException('Serialized message is unavailable');
+            throw new LogicException('Serialized message is unavailable');
         }
 
         return $this->serializedMessage;
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withMessage($message)
+    public function withMessage(object $message): self
     {
-        Assertion::isObject($message);
-
         return new self($this->messageType, $message, $this->serializedMessage);
     }
 
-    /**
-     * {@inheritdoc}
-     */
-    public function withSerializedMessage($serializedMessage)
+    public function withSerializedMessage(string $serializedMessage): self
     {
-        Assertion::string($serializedMessage);
-
         return new self($this->messageType, $this->message, $serializedMessage);
-    }
-
-    private function setMessageType($messageType)
-    {
-        Assertion::string($messageType);
-
-        $this->messageType = $messageType;
-    }
-
-    private function setMessage($message = null)
-    {
-        $this->message = $message;
-    }
-
-    private function setSerializedMessage($serializedMessage)
-    {
-        Assertion::nullOrString($serializedMessage);
-
-        $this->serializedMessage = $serializedMessage;
     }
 }
